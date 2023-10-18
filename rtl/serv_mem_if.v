@@ -1,5 +1,5 @@
 `default_nettype none
-module qerv_mem_if
+module serv_mem_if
   #(
     parameter [0:0] WITH_CSR = 1,
     parameter	    W = 1,
