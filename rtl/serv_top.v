@@ -379,6 +379,8 @@ module serv_top
       .i_mdu_op (mdu_op),
       .o_lsb    (lsb),
       //Control
+      .i_shift_op  (0),
+      .i_right_shift_op(0),
       .i_sh_signed (bufreg_sh_signed),
       .i_rs1_en    (bufreg_rs1_en),
       .i_imm_en    (bufreg_imm_en),
@@ -386,6 +388,7 @@ module serv_top
       //Data
       .i_rs1    (rs1),
       .i_imm    (imm),
+      .i_shift_counter_lsb(0),
       .o_q      (bufreg_q),
       //External
       .o_dbus_adr (o_dbus_adr),

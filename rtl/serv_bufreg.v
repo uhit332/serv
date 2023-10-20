@@ -1,5 +1,7 @@
-module serv_bufreg #(
-      parameter [0:0] MDU = 0
+module qerv_bufreg #(
+      parameter [0:0] MDU = 0,
+      parameter BITS_PER_CYCLE = 1,
+      parameter LB = $clog2(BITS_PER_CYCLE)
 )(
    input wire 	      i_clk,
    //State
@@ -13,20 +15,33 @@ module serv_bufreg #(
    input wire 	      i_rs1_en,
    input wire 	      i_imm_en,
    input wire 	      i_clr_lsb,
-   input wire 	      i_sh_signed, 
+   input wire         i_shift_op,
+   input wire         i_right_shift_op,
+   input wire 	      i_sh_signed,
    //Data
-   input wire 	      i_rs1,
-   input wire 	      i_imm,
-   output wire 	      o_q,
+   input wire [BITS_PER_CYCLE-1:0] i_rs1,
+   input wire [BITS_PER_CYCLE-1:0] i_imm,
+   // i_shift_counter_lsb[LB] must be zero to support the case LB=0
+   input wire [LB:0]  i_shift_counter_lsb,
+   output wire [BITS_PER_CYCLE-1:0] o_q,
    //External
    output wire [31:0] o_dbus_adr,
    //Extension
    output wire [31:0] o_ext_rs1);
 
-   wire 	      c, q;
+   wire [BITS_PER_CYCLE-1:0] zeroB = 0;
+
+   wire 	      c;
+   wire [BITS_PER_CYCLE-1:0] q;
+   reg  [2*BITS_PER_CYCLE-1:0] next_shifted;
    reg 		      c_r;
    reg [31:2] 	      data;
    reg [1:0]            lsb;
+   wire [LB:0]      shift_counter_rev = BITS_PER_CYCLE - i_shift_counter_lsb;
+
+   wire [LB:0] shift_amount = i_shift_op ? (
+       i_right_shift_op ? (i_shift_counter_lsb == 00 ? 0 : (shift_counter_rev[LB:0])) : i_shift_counter_lsb
+   ) : 0;
 
    wire 	      clr_lsb = i_cnt0 & i_clr_lsb;
 
