@@ -409,7 +409,6 @@ module serv_top
       .i_imm        (imm),
       .i_shift_counter_lsb(0),
       .o_op_b       (op_b),
-      .o_shift_counter_lsb(),
       .o_q          (bufreg2_q),
       //External
       .o_dat        (o_dbus_dat),
