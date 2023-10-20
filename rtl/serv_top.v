@@ -403,10 +403,13 @@ module serv_top
       //Control
       .i_op_b_sel   (op_b_sel),
       .i_shift_op   (shift_op),
+      .i_right_shift_op(0),
       //Data
       .i_rs2        (rs2),
       .i_imm        (imm),
+      .i_shift_counter_lsb(0),
       .o_op_b       (op_b),
+      .o_shift_counter_lsb(),
       .o_q          (bufreg2_q),
       //External
       .o_dat        (o_dbus_dat),
