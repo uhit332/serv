@@ -405,7 +405,7 @@ module serv_top
       //Control
       .i_op_b_sel   (op_b_sel),
       .i_shift_op   (shift_op),
-      .i_right_shift_op(0),
+      .i_right_shift_op(0 & shift_counter_lsb),
       //Data
       .i_rs2        (rs2),
       .i_imm        (imm),
