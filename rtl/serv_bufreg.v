@@ -35,7 +35,7 @@ module serv_bufreg #(
    wire [BITS_PER_CYCLE-1:0] q;
    reg  [2*BITS_PER_CYCLE-1:0] next_shifted;
    reg 		      c_r;
-   reg [31:2] 	      data;
+   reg [31:0] 	      data;
    reg [1:0]            lsb;
    wire [LB:0]      shift_counter_rev = BITS_PER_CYCLE - i_shift_counter_lsb;
 
@@ -45,22 +45,40 @@ module serv_bufreg #(
 
    wire 	      clr_lsb = i_cnt0 & i_clr_lsb;
 
-   assign {c,q} = {1'b0,(i_rs1 & i_rs1_en)} + {1'b0,(i_imm & i_imm_en & !clr_lsb)} + c_r;
+   wire [BITS_PER_CYCLE-1:0] mask;
+   generate
+     if (BITS_PER_CYCLE == 4)
+        assign  mask = 4'b1110;
+     else if (BITS_PER_CYCLE == 1)
+	assign  mask = 0;
+   endgenerate
+
+   assign {c,q} = {1'b0,(i_rs1_en ? i_rs1 : zeroB)} + {1'b0,((i_imm_en) ? (clr_lsb ? (i_imm & mask) : i_imm) : zeroB)} + { zeroB, c_r };
 
    always @(posedge i_clk) begin
       //Make sure carry is cleared before loading new data
       c_r <= c & i_en;
 
-      if (i_en)
-	data <= {i_init ? q : (data[31] & i_sh_signed), data[31:3]};
+      if (i_cnt0)
+        next_shifted <= 0;
 
-      if (i_init ? (i_cnt0 | i_cnt1) : i_en)
-	lsb <= {i_init ? q : data[2],lsb[1]};
+      if (i_en)
+        data <= {i_init ? q : (i_sh_signed ? {BITS_PER_CYCLE{data[31]}} : zeroB), data[31:BITS_PER_CYCLE]};
+
+    if (BITS_PER_CYCLE == 1) begin
+        if (i_init ? (i_cnt0 | i_cnt1) : i_en)
+            lsb <= {i_init ? q : data[2],lsb[1]};
+    end else if (BITS_PER_CYCLE == 4) begin
+        if (i_en) begin
+                next_shifted <= ({ zeroB, data[BITS_PER_CYCLE-1:0]} << shift_amount);
+                if (i_cnt0) lsb <= q[1:0];
+        end
+    end
    end
 
-   assign o_q = lsb[0] & i_en;
-   assign o_dbus_adr = {data, 2'b00};
-   assign o_ext_rs1  = {o_dbus_adr[31:2],lsb};
+   assign o_q = i_en ? ((data[BITS_PER_CYCLE-1:0] << shift_amount) | next_shifted[2*BITS_PER_CYCLE-1:BITS_PER_CYCLE]) : zeroB;
+   assign o_dbus_adr = {data[31:2], 2'b00};
+   assign o_ext_rs1  = data;
    assign o_lsb = (MDU & i_mdu_op) ? 2'b00 : lsb;
 
 endmodule
