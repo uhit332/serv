@@ -385,12 +385,12 @@ module serv_top
       .i_mdu_op (mdu_op),
       .o_lsb    (lsb),
       //Control
-      .i_shift_op  (0),
-      .i_right_shift_op(0),
       .i_sh_signed (bufreg_sh_signed),
       .i_rs1_en    (bufreg_rs1_en),
       .i_imm_en    (bufreg_imm_en),
       .i_clr_lsb   (bufreg_clr_lsb),
+      .i_shift_op   (shift_op),
+      .i_right_shift_op (sh_right),
       //Data
       .i_rs1    (rs1),
       .i_imm    (imm),
@@ -414,11 +414,11 @@ module serv_top
       //Control
       .i_op_b_sel   (op_b_sel),
       .i_shift_op   (shift_op),
-      .i_right_shift_op(0 & shift_counter_lsb),
+      .i_right_shift_op (sh_right),
       //Data
       .i_rs2        (rs2),
       .i_imm        (imm),
-      .i_shift_counter_lsb(0),
+      .i_shift_counter_lsb(shift_counter_lsb),
       .o_op_b       (op_b),
       .o_shift_counter_lsb(shift_counter_lsb),
       .o_q          (bufreg2_q),
