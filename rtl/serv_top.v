@@ -4,6 +4,7 @@ module serv_top
   #(parameter WITH_CSR = 1,
     parameter	    W = 1,
     parameter	    B = W-1,
+    parameter LB = $clog2(W),
     parameter PRE_REGISTER = 1,
     parameter RESET_STRATEGY = "MINI",
     parameter RESET_PC = 32'd0,
@@ -368,7 +369,7 @@ module serv_top
       .i_wb_en      (wb_ibus_ack),
       .i_wb_rdt     (i_wb_rdt[31:7]));
 
-   wire [0:0]  shift_counter_lsb;
+   wire [LB:0]  shift_counter_lsb;
 
    serv_bufreg
       #(.MDU(MDU),
@@ -394,7 +395,7 @@ module serv_top
       //Data
       .i_rs1    (rs1),
       .i_imm    (imm),
-      .i_shift_counter_lsb(0),
+      .i_shift_counter_lsb(shift_counter_lsb),
       .o_q      (bufreg_q),
       //External
       .o_dbus_adr (o_dbus_adr),
