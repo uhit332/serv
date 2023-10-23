@@ -1,6 +1,10 @@
 `default_nettype none
 module serv_csr
-  #(parameter RESET_STRATEGY = "MINI")
+  #(
+    parameter RESET_STRATEGY = "MINI",
+    parameter W = 1,
+    parameter B = W-1
+  )
   (
    input wire 	    i_clk,
    input wire 	    i_rst,
@@ -26,11 +30,11 @@ module serv_csr
    input wire 	    i_mret,
    input wire 	    i_csr_d_sel,
    //Data
-   input wire 	    i_rf_csr_out,
-   output wire 	    o_csr_in,
-   input wire 	    i_csr_imm,
-   input wire 	    i_rs1,
-   output wire 	    o_q);
+   input wire 	[B:0]    i_rf_csr_out,
+   output wire 	[B:0]    o_csr_in,
+   input wire 	[B:0]    i_csr_imm,
+   input wire 	[B:0]    i_rs1,
+   output wire 	[B:0]    o_q);
 
    localparam [1:0]
      CSR_SOURCE_CSR = 2'b00,
@@ -44,32 +48,32 @@ module serv_csr
 
    reg 		mcause31;
    reg [3:0] 	mcause3_0;
-   wire 	mcause;
+   wire [B:0]	mcause;
 
-   wire 	csr_in;
-   wire 	csr_out;
+   wire [B:0]	csr_in;
+   wire [B:0]	csr_out;
 
    reg 		timer_irq_r;
 
-   wire 	d = i_csr_d_sel ? i_csr_imm : i_rs1;
+   wire [B:0]	d = i_csr_d_sel ? i_csr_imm : i_rs1;
 
    assign csr_in = (i_csr_source == CSR_SOURCE_EXT) ? d :
 		   (i_csr_source == CSR_SOURCE_SET) ? csr_out | d :
 		   (i_csr_source == CSR_SOURCE_CLR) ? csr_out & ~d :
 		   (i_csr_source == CSR_SOURCE_CSR) ? csr_out :
-		   1'bx;
+		   {W{1'bx}};
 
-   assign csr_out = (i_mstatus_en & mstatus_mie & i_cnt3) |
+   assign csr_out = ({i_mstatus_en & mstatus_mie & i_cnt3 & i_en,{B{1'b0}}}) |
 		    i_rf_csr_out |
-		    (i_mcause_en & i_en & mcause);
+		    ({W{i_mcause_en & i_en}} & mcause);
 
    assign o_q = csr_out;
 
    wire 	timer_irq = i_mtip & mstatus_mie & mie_mtie;
 
-   assign mcause = i_cnt0to3 ? mcause3_0[0] : //[3:0]
-		   i_cnt_done ? mcause31 //[31]
-		   : 1'b0;
+   assign mcause = i_cnt0to3 ? mcause3_0[B:0] : //[3:0]
+		   i_cnt_done ? {mcause31,{B{1'b0}}} //[31]
+		   : {W{1'b0}};
 
    assign o_csr_in = csr_in;
 
@@ -92,8 +96,8 @@ module serv_csr
 
        These conditions are all mutually exclusibe
        */
-      if ((i_trap & i_cnt_done) | i_mstatus_en & i_cnt3 | i_mret)
-	mstatus_mie <= !i_trap & (i_mret ?  mstatus_mpie : csr_in);
+      if ((i_trap & i_cnt_done) | i_mstatus_en & i_cnt3 & i_en | i_mret)
+	mstatus_mie <= !i_trap & (i_mret ?  mstatus_mpie : csr_in[B]);
 
       /*
        Note: To save resources mstatus_mpie (mstatus bit 7) is not
@@ -131,7 +135,7 @@ module serv_csr
 	 mcause3_0[0] <= o_new_irq | i_e_op | (!i_trap & mcause3_0[1]);
       end
       if (i_mcause_en & i_cnt_done | i_trap)
-	mcause31 <= i_trap ? o_new_irq : csr_in;
+	mcause31 <= i_trap ? o_new_irq : csr_in[B];
       if (i_rst)
 	if (RESET_STRATEGY != "NONE") begin
 	   o_new_irq <= 1'b0;
