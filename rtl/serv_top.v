@@ -349,6 +349,8 @@ module serv_top
       .o_rd_csr_en        (rd_csr_en),
       .o_rd_alu_en        (rd_alu_en));
 
+   generate
+   if (W == 1)
    serv_immdec immdec
      (
       .i_clk        (clk),
@@ -368,7 +370,28 @@ module serv_top
       //External
       .i_wb_en      (wb_ibus_ack),
       .i_wb_rdt     (i_wb_rdt[31:7]));
-
+   else
+   serv_immdec immdec
+     (
+      .i_clk        (clk),
+      //State
+      .i_cnt_en     (cnt_en),
+      .i_cnt_done   (cnt_done),
+      //Control
+      .i_immdec_en        (immdec_en),
+      .i_csr_imm_en (csr_imm_en),
+      .i_ctrl       (immdec_ctrl),
+      .o_rd_addr    (rd_addr),
+      .o_rs1_addr   (rs1_addr),
+      .o_rs2_addr   (rs2_addr),
+      //Data
+      .o_csr_imm    (csr_imm),
+      .o_imm        (imm),
+      //External
+      .i_wb_en      (wb_ibus_ack),
+      .i_wb_rdt     (i_wb_rdt[31:7]));
+   endgenerate
+ 
    wire [LB:0]  shift_counter_lsb;
 
    serv_bufreg
