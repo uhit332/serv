@@ -424,7 +424,7 @@ module serv_top
       .o_dbus_adr (o_dbus_adr),
       .o_ext_rs1  (o_ext_rs1));
 
-   serv_bufreg2 bufreg2
+   serv_bufreg2#(.BITS_PER_CYCLE(W)) bufreg2
      (
       .i_clk        (clk),
       //State
@@ -483,7 +483,7 @@ module serv_top
       //External
       .o_ibus_adr (wb_ibus_adr));
 
-   serv_alu alu
+   serv_alu#(.W(W)) alu
      (
       .clk        (clk),
       //State
@@ -576,7 +576,10 @@ module serv_top
    generate
       if (|WITH_CSR) begin
 	 serv_csr
-	   #(.RESET_STRATEGY (RESET_STRATEGY))
+	   #(
+		   .RESET_STRATEGY (RESET_STRATEGY),
+		   .W(W)
+	   )
 	 csr
 	   (
 	    .i_clk        (clk),
