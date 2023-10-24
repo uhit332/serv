@@ -50,7 +50,7 @@ module serv_bufreg2
    reg decrement_ff = 0;
    wire [5:0] dat_shamt = (decrement) ?
 	      //Down counter mode
-	      (   (i_right_shift_op && !decrement_ff && LB > 0 && o_shift_counter_lsb != 0) ? 
+	      (   (i_right_shift_op && !decrement_ff && LB > 0) ? 
                   // this is just to make a shift for amount not divisible by BITS_PER_CYCLE
                   dat[5:0] : 
                   (dat[5:0]-BITS_PER_CYCLE)
