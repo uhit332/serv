@@ -370,8 +370,8 @@ module serv_top
       //External
       .i_wb_en      (wb_ibus_ack),
       .i_wb_rdt     (i_wb_rdt[31:7]));
-   else
-   serv_immdec immdec
+   else if (W == 4)
+   qerv_immdec immdec
      (
       .i_clk        (clk),
       //State
