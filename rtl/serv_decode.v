@@ -93,11 +93,12 @@ module serv_decode
        opcode == 5'b00011 && funct3 == 3'b000 ||
        opcode == 5'b11100 && whole[19:7] == 0 && whole[31:21] == 0 ||
        opcode == 5'b00100 && (funct3[2:1] == 2'b00 && funct7 == 0 || funct3 == 3'b101 && funct7[4:0] == 0 && funct7[6] == 0) ||
-       whole  == 32'b00000001000000000000000000001111 ||
+       whole  == 30'b100000110011xxxxx000xxxxx00011 || 
+       whole  == 30'b000000010000000000000000000011 ||
        opcode == 5'b00011 && funct3 == 3'b001 ||
        opcode == 5'b11100 && funct3 != 3'b000 && funct3 != 3'b100 ||
        opcode == 5'b01100 && funct7 == 7'b0000001 ||
-       opcode == 5'b01011 && funct3 == 3'b010 && (funct7[3:2] == 0 || funct7[7:5] == 0) 
+       opcode == 5'b01011 && funct3 == 3'b010 && (funct7[3:2] == 0 || funct7[6:4] == 0) 
      );
  
    wire co_mdu_op     = MDU & (opcode == 5'b01100) & imm25;
