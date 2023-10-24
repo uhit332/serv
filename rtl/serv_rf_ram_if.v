@@ -16,7 +16,7 @@ module serv_rf_ram_if
     parameter raw=$clog2(32+csr_regs), //Register address width
     parameter l2w=$clog2(width), //log2 of width
     parameter aw=5+raw-l2w, //Address width
-    parameter BITS_PER_CYCLE = 1,
+    parameter BITS_PER_CYCLE ,
     parameter LOG_BITS_PER_CYCLE = $clog2(BITS_PER_CYCLE)
   ) 
   (

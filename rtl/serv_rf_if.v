@@ -1,7 +1,7 @@
 `default_nettype none
 module serv_rf_if
   #(parameter WITH_CSR = 1,
-    parameter W = 1,
+    parameter W,
     parameter B = W-1
   )
   (//RF Interface

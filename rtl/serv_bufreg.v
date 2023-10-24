@@ -1,6 +1,6 @@
 module serv_bufreg #(
       parameter [0:0] MDU = 0,
-      parameter BITS_PER_CYCLE = 1,
+      parameter BITS_PER_CYCLE ,
       parameter LB = $clog2(BITS_PER_CYCLE)
 )(
    input wire 	      i_clk,

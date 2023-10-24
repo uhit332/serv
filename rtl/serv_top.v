@@ -2,7 +2,7 @@
 
 module serv_top
   #(parameter WITH_CSR = 1,
-    parameter	    W = 1,
+    parameter	    W,
     parameter	    B = W-1,
     parameter LB = $clog2(W),
     parameter PRE_REGISTER = 1,
