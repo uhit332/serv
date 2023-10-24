@@ -63,8 +63,8 @@ module serv_decode
    //To RF IF
    output reg       o_rd_mem_en,
    output reg       o_rd_csr_en,
-   output reg       o_rd_alu_en,
-   output wire      o_valid_instruction
+   output reg       o_rd_alu_en
+   //output wire      o_valid_instruction
    );
 
    reg [31:2] whole;
@@ -339,7 +339,7 @@ module serv_decode
             o_rd_csr_en        = co_rd_csr_en;
             o_rd_alu_en        = co_rd_alu_en;
             o_rd_mem_en        = co_rd_mem_en;
-	    o_valid_instruction= co_valid_instruction;
+	    //o_valid_instruction= co_valid_instruction;
          end
 
       end else begin
@@ -404,7 +404,7 @@ module serv_decode
                o_rd_csr_en        <= co_rd_csr_en;
                o_rd_alu_en        <= co_rd_alu_en;
                o_rd_mem_en        <= co_rd_mem_en;
-	       o_valid_instruction<= co_valid_instruction;
+	       //o_valid_instruction<= co_valid_instruction;
             end
          end
 
