@@ -285,7 +285,13 @@ module serv_top
 
    serv_decode
      #(.PRE_REGISTER (PRE_REGISTER),
-       .MDU(MDU))
+       .MDU(MDU),
+`ifdef RISCV_FORMAL
+       .CHECK_VALIDITY(1) 
+`else
+       .CHECK_VALIDITY(0)
+`endif
+     )
    decode
      (
       .clk (clk),
