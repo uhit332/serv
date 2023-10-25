@@ -184,6 +184,8 @@ module serv_decode
     */
    always @(posedge clk) begin
       assume(co_valid_instruction == 1'b1);
+      assume(co_ctrl_mret == 1'b0);
+      assume(co_e_op == 1'b0);
    end
 `endif
 
