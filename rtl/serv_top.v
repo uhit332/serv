@@ -510,7 +510,8 @@ module serv_top
    serv_rf_if
      #(.WITH_CSR (WITH_CSR), .W(W))
    rf_if
-     (//RF interface
+     (.clk         (clk), 
+      //RF interface
       .i_cnt_en    (cnt_en),
       .o_wreg0     (o_wreg0),
       .o_wreg1     (o_wreg1),
