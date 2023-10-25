@@ -64,9 +64,12 @@ endgenerate
    assign {pc_plus_4_cy,pc_plus_4} = pc+plus_4+pc_plus_4_cy_r_w;
 
    generate
-      if (|WITH_CSR)
-	 assign new_pc = i_trap ? (i_csr_pc & {{B{1'b1}},!i_cnt03}) : i_jump ? pc_plus_offset_aligned : pc_plus_4;
-      else
+      if (|WITH_CSR) begin
+	 if (W == 1)
+	   assign new_pc = i_trap ? (i_csr_pc & !(i_cnt0 || i_cnt1)) : i_jump ? pc_plus_offset_aligned : pc_plus_4;
+         else if (W == 4)
+	   assign new_pc = i_trap ? (i_csr_pc & (i_cnt03 ? 4'b1100 : 4'b1111)) : i_jump ? pc_plus_offset_aligned : pc_plus_4;
+      end else
 	assign new_pc = i_jump ? pc_plus_offset_aligned : pc_plus_4;
    endgenerate
    assign o_rd  = ({W{i_utype}} & pc_plus_offset_aligned) | (pc_plus_4 & {W{i_jal_or_jalr}});
