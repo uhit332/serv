@@ -97,7 +97,7 @@ module serv_decode
        whole  == 30'b000000010000000000000000000011 ||
        opcode == 5'b00011 && funct3 == 3'b001 ||
        opcode == 5'b11100 && funct3 != 3'b000 && funct3 != 3'b100 ||
-       opcode == 5'b01100 && funct7 == 7'b0000001 ||
+       opcode == 5'b01100 && funct7 == 7'b0000001 && MDU == 1 ||
        opcode == 5'b01011 && funct3 == 3'b010 && (funct7[3:2] == 0 || funct7[6:4] == 0) 
      );
  
