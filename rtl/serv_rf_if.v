@@ -85,7 +85,7 @@ module serv_rf_if
 
    reg [1:0] trap_ff = 2'b00;
    always @(posedge clk) trap_ff <= {trap_ff[0], i_trap};
-   wire trap_d = i_trap || trap_ff[0] || trap_ff[1];
+   wire trap_d = i_trap ; // || trap_ff[0] || trap_ff[1];
    assign o_wreg0 = trap_d ? {6'b100011} : {1'b0,i_rd_waddr};
    assign o_wreg1 = trap_d ? {6'b100010} : {4'b1000,i_csr_addr};
 

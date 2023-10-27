@@ -47,7 +47,9 @@ module serv_bufreg #(
 
    wire [BITS_PER_CYCLE-1:0] mask;
    generate
-     if (BITS_PER_CYCLE == 4)
+     if (BITS_PER_CYCLE == 8)
+        assign  mask = 8'b11111110;
+     else if (BITS_PER_CYCLE == 4)
         assign  mask = 4'b1110;
      else if (BITS_PER_CYCLE == 1)
 	assign  mask = 0;
@@ -74,7 +76,7 @@ module serv_bufreg #(
         if (i_init ? (i_cnt0 | i_cnt1) : i_en)
             lsb <= {i_init ? q : data[2],lsb[1]};
       end
-    else if (BITS_PER_CYCLE == 4)
+    else
       always @(posedge i_clk) begin
         if (i_en)
             if (i_cnt0) lsb <= q[1:0];

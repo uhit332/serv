@@ -55,7 +55,7 @@ module serv_ctrl
 generate
 if (W == 1)
    assign plus_4        = i_iscomp ? i_cnt1 : i_cnt2;
-else if (W == 4)
+else
    assign plus_4        = (i_cnt03) ? (i_iscomp ? 2 : 4) : 0;
 endgenerate
 
@@ -68,7 +68,7 @@ endgenerate
 	 if (W == 1)
 	   assign new_pc = i_trap ? (i_csr_pc & !(i_cnt0 || i_cnt1)) : i_jump ? pc_plus_offset_aligned : pc_plus_4;
          else if (W == 4)
-	   assign new_pc = i_trap ? (i_csr_pc & (i_cnt03 ? 4'b1100 : 4'b1111)) : i_jump ? pc_plus_offset_aligned : pc_plus_4;
+	   assign new_pc = i_trap ? (i_csr_pc & (i_cnt03 ? {(W-2){1'b1}, 2'b00} : {W{1'b1}})) : i_jump ? pc_plus_offset_aligned : pc_plus_4;
       end else
 	assign new_pc = i_jump ? pc_plus_offset_aligned : pc_plus_4;
    endgenerate
