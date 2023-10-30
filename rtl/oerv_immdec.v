@@ -136,21 +136,22 @@ module oerv_immdec
 	 i20_2   <= i28;
 	 i28   <= (i_ctrl[1] | i_ctrl[2]) ? i31 : i16;
 	 i16   <= i_ctrl[3] ? i31 : i24;
+	 i11   <= (i_ctrl[1] | i_ctrl[2]) ? i31 : i12;
 	 i24   <= (i_ctrl[1] | i_ctrl[2]) ? i31 : i12;
 	 i12   <= i_ctrl[3] ? i31 : i20_2;
       end
    end
 
    assign o_imm[7] = (i_cnt_done ? i31 : (i_ctrl[0] ? i27 : i27));
-   assign o_imm[6] = (i_cnt_done ? i31 : (i_ctrl[0] ? i10 : i23));
+   assign o_imm[3] = ((i_ctrl[0] ? i10 : i23));
    
-   assign o_imm[5] = i_ctrl[0] ? i26 : i26;
-   assign o_imm[4] = i_ctrl[0] ? i9 : i22;
+   assign o_imm[6] = i_ctrl[0] ? i26 : i26;
+   assign o_imm[2] = i_ctrl[0] ? i9 : i22;
 
-   assign o_imm[3] = i_ctrl[0] ? i25 : i25;
-   assign o_imm[2] = i_ctrl[0] ? i8 : i21;
+   assign o_imm[5] = i_ctrl[0] ? i25 : i25;
+   assign o_imm[1] = i_ctrl[0] ? i8 : i21;
    
-   assign o_imm[1] = i_ctrl[0] ? i28  : i24;
+   assign o_imm[4] = i_ctrl[0] ? i11  : i24;
    assign o_imm[0] = i_ctrl[0] ? i7_2 : i20_2;
 
 endmodule
