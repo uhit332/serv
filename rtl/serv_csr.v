@@ -71,11 +71,16 @@ module serv_csr
 
    wire 	timer_irq = i_mtip & mstatus_mie & mie_mtie;
 
-   localparam Wm4 = W - 4;
-
-   assign mcause = i_cnt0to3 ? ((W>4) ? {{Wm4{1'b0}}, mcause3_0[B:0]} : mcause3_0[B:0]) : //[3:0]
+   generate 
+   if (8 == W)
+   assign mcause = i_cnt0to3 ? ((W>4) ? {{4{1'b0}}, mcause3_0[B:0]} : mcause3_0[B:0]) : //[3:0]
 		   i_cnt_done ? {mcause31,{B{1'b0}}} //[31]
 		   : {W{1'b0}};
+   else
+   assign mcause = i_cnt0to3 ? mcause3_0[B:0] : //[3:0]
+		   i_cnt_done ? {mcause31,{B{1'b0}}} //[31]
+		   : {W{1'b0}};
+   endgenerate;
 
    assign o_csr_in = csr_in;
 
