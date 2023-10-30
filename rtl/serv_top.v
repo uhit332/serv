@@ -120,6 +120,7 @@ module serv_top
    wire          cnt2;
    wire          cnt3;
    wire          cnt7;
+   wire          cnt8;
 
    wire 	 cnt_done;
 
@@ -246,6 +247,7 @@ module serv_top
       .o_cnt2         (cnt2),
       .o_cnt3         (cnt3),
       .o_cnt7         (cnt7),
+      .o_cnt8         (cnt8),
       .o_cnt_done     (cnt_done),
       .o_bufreg_en    (bufreg_en),
       .o_ctrl_pc_en   (ctrl_pc_en),
@@ -492,6 +494,7 @@ module serv_top
       .i_cnt1     (cnt1),
       .i_cnt2     (cnt2),
       .i_cnt03    (cnt0to3),
+      .i_cnt8     (cnt8),
       //Control
       .i_jump     (jump),
       .i_jal_or_jalr (jal_or_jalr),
