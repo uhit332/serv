@@ -397,6 +397,7 @@ module serv_top
       .o_imm        (imm),
       //External
       .i_wb_en      (wb_ibus_ack),
+      .i_wb_rdt     (i_wb_rdt[31:7]));
    else if (W == 8)
    oerv_immdec immdec
      (
@@ -416,7 +417,6 @@ module serv_top
       .o_imm        (imm),
       //External
       .i_wb_en      (wb_ibus_ack),
-      .i_wb_rdt     (i_wb_rdt[31:7]));
       .i_wb_rdt     (i_wb_rdt[31:7]));
    endgenerate
  
