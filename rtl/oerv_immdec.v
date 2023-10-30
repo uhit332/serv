@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: ISC
 `default_nettype none
-module qerv_immdec
+module oerv_immdec
   (
    input wire 	     i_clk,
    //State
