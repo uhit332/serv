@@ -20,6 +20,7 @@ module serv_state
    output wire 	     o_cnt2,
    output wire 	     o_cnt3,
    output wire 	     o_cnt7,
+   output wire       o_cnt8,
    output wire 	     o_cnt_done,
    output wire 	     o_bufreg_en,
    output wire 	     o_ctrl_pc_en,
@@ -77,6 +78,7 @@ module serv_state
    assign o_cnt2 = (o_cnt[4:2] == 3'd0) & cnt_r[2];
    assign o_cnt3 = (o_cnt[4:2] == 3'd0) & cnt_r[3];
    assign o_cnt7 = (o_cnt[4:2] == 3'd1) & cnt_r[3];
+   assign o_cnt8 = (o_cnt[4:2] == 3'd2) & cnt_r[0];
 
    //Take branch for jump or branch instructions (opcode == 1x0xx) if
    //a) It's an unconditional branch (opcode[0] == 1)
@@ -121,7 +123,12 @@ module serv_state
 
    assign o_init = i_two_stage_op & !i_new_irq & !init_done;
 
-   assign o_cnt_done = (o_cnt[4:2] == 3'b111) & cnt_r[3];
+   generate
+   if (8 == W)
+     assign o_cnt_done = (o_cnt[4:3] == 2'b11);
+   else 
+     assign o_cnt_done = (o_cnt[4:2] == 3'b111) & cnt_r[3];
+   endgenerate;
 
    always @(posedge i_clk) begin
       //ibus_cyc changes on three conditions.
@@ -176,10 +183,13 @@ module serv_state
        just need to check if cnt_r is not zero to see if the counter is
        currently running
        */
-      if (W == 4) begin
+      if (W == 4 || W == 8) begin
           if (i_rf_ready) o_cnt_en <= 1; else
           if (o_cnt_done) o_cnt_en <= 0;
-          o_cnt <= o_cnt + { 2'b0, o_cnt_en };
+	  if (W == 4)
+            o_cnt <= o_cnt + { 2'b0, o_cnt_en };
+          else
+            o_cnt <= o_cnt + { 1'b0, o_cnt_en, 1'b0 };
       end else if (W == 1) begin
           o_cnt <= o_cnt + {2'd0,cnt_r[3]};
           cnt_r <= {cnt_r[2:0],(cnt_r[3] & !o_cnt_done) | (i_rf_ready & !o_cnt_en)};
@@ -189,7 +199,7 @@ module serv_state
             o_cnt   <= 3'd0;
             if (W == 1)
                 cnt_r <= 4'b0000;
-            else if (W == 4)
+            else if (W == 4 || W == 8)
                 o_cnt_en <= 1'b0;
          end
       end
@@ -198,7 +208,7 @@ module serv_state
    always @(*)
    if (W == 1)
      o_cnt_en = |cnt_r;
-   else if (W == 4)
+   else if (W == 4 || W == 8)
      cnt_r = 4'b1111;
 
    assign o_ctrl_trap = WITH_CSR & (i_e_op | i_new_irq | misalign_trap_sync);
