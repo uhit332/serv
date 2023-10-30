@@ -63,12 +63,14 @@ endgenerate
 
    assign {pc_plus_4_cy,pc_plus_4} = pc+plus_4+pc_plus_4_cy_r_w;
 
+   localparam Wm2 = W - 2;
+
    generate
       if (|WITH_CSR) begin
 	 if (W == 1)
 	   assign new_pc = i_trap ? (i_csr_pc & !(i_cnt0 || i_cnt1)) : i_jump ? pc_plus_offset_aligned : pc_plus_4;
-         else if (W == 4)
-	   assign new_pc = i_trap ? (i_csr_pc & (i_cnt03 ? {(W-2){1'b1}, 2'b00} : {W{1'b1}})) : i_jump ? pc_plus_offset_aligned : pc_plus_4;
+         else
+	   assign new_pc = i_trap ? (i_csr_pc & (i_cnt03 ? {{Wm2{1'b1}}, 2'b00} : {W{1'b1}})) : i_jump ? pc_plus_offset_aligned : pc_plus_4;
       end else
 	assign new_pc = i_jump ? pc_plus_offset_aligned : pc_plus_4;
    endgenerate
