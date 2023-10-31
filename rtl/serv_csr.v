@@ -73,7 +73,7 @@ module serv_csr
 
    generate 
    if (8 == W)
-   assign mcause = i_cnt0to3 ? ((W>4) ? {{4{1'b0}}, mcause3_0[B:0]} : mcause3_0[B:0]) : //[3:0]
+   assign mcause = i_cnt0to3 ? ({{4{1'b0}}, mcause3_0}) : //[3:0]
 		   i_cnt_done ? {mcause31,{B{1'b0}}} //[31]
 		   : {W{1'b0}};
    else

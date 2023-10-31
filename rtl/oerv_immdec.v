@@ -14,13 +14,13 @@ module oerv_immdec
    output wire [4:0] o_rs1_addr,
    output wire [4:0] o_rs2_addr,
    //Data
-   output wire [3:0] o_csr_imm,
+   output wire [7:0] o_csr_imm,
    output wire [7:0] o_imm,
    //External
    input wire	     i_wb_en,
    input wire [31:7] i_wb_rdt);
 
-   assign o_csr_imm = 4'd0; // todo: broken
+   assign o_csr_imm = 0; // todo: broken
 
 
    reg [4:0]	     rd_addr;
