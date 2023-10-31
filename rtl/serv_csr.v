@@ -104,7 +104,7 @@ module serv_csr
        These conditions are all mutually exclusibe
        */
       if ((i_trap & i_cnt_done) | i_mstatus_en & i_cnt3 & i_en | i_mret)
-	mstatus_mie <= !i_trap & (i_mret ?  mstatus_mpie : csr_in[B]);
+	mstatus_mie <= !i_trap & (i_mret ?  mstatus_mpie : csr_in[(W == 1) ? 0 : 3]);
 
       /*
        Note: To save resources mstatus_mpie (mstatus bit 7) is not
