@@ -1,7 +1,7 @@
 `default_nettype none
 module serv_alu
   #(
-   parameter W,
+   parameter W = 1,
    parameter B = W-1
   )
   (
