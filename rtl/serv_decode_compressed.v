@@ -23,6 +23,7 @@ module serv_decode_compressed
    output reg       o_dbus_en,
    //MDU
    output reg       o_mdu_op,
+   output reg       o_ext_funct3,
    //To bufreg
    output reg       o_bufreg_rs1_en,
    output reg       o_bufreg_imm_en,
@@ -66,16 +67,27 @@ module serv_decode_compressed
    reg [15:0] whole;
    reg [1:0] quadrant;
    reg [2:0] funct3;
+   reg [1:0] funct2;
    reg [2:0] funct3l;
-   reg        op20;
-   reg        op21;
-   reg        op22;
-   reg        op26;
 
-   reg       imm25;
-   reg       imm30;
+   reg [11:0] imm;
+   wire [11:0] co_imm;
 
-   
+   wire csr_valid = 0;
+
+   wire co_rd_csr_en = 0;
+
+   wire co_csr_en         = 0;
+   wire co_csr_mstatus_en = 0;
+   wire co_csr_mie_en     = 0;
+   wire co_csr_mcause_en  = 0;
+
+   wire [1:0] co_csr_source = 0;
+   wire co_csr_d_sel = 0;
+   wire co_csr_imm_en = 0;
+   wire [1:0] co_csr_addr = 0;
+
+   wire [2:0] co_ext_funct3 = 0; // todo: should not be 0 of course 
 
    // coded from this table https://github.com/riscv/riscv-opcodes
    wire co_valid_instruction = 
@@ -137,7 +149,7 @@ module serv_decode_compressed
    wire co_rd_op = !(quadrant == 2'b00 && funct3 == 3'b110 || 
 	   quadrant == 2'b10 && (funct3 == 3'b110 || funct3 == 3'b000 && funct3l[2] == 0) || 
 	   quadrant == 2'b01 && funct3 == 3'b101
-	   ;
+   );
 
    //
    //funct3
@@ -196,33 +208,44 @@ module serv_decode_compressed
    wire co_mem_half   = 0;
 
    wire co_3reg_alu =  quadrant == 2'b01 && funct3 == 3'b100 && funct3l[1:0] == 2'b11; 
-   wire [1:0] co_alu_bool_op = (!co_3reg_alu) ? 2'b01 : (funct2 == 2'b01) ? : 2'b00 : funct2;
+   wire [1:0] co_alu_bool_op = (!co_3reg_alu) ? 2'b01 : (funct2 == 2'b01) ? 2'b00 : funct2;
 
    wire [2:0] co_alu_rd_sel;
    assign co_alu_rd_sel[0] = !co_shift_op; // Add/sub, but really anything not shift
    assign co_alu_rd_sel[1] = 0; //SLT*
-   assign co_alu_rd_sel[2] = co_3reg_alu && func3l == 3'b011 && funct2 != 0; //Bool
+   assign co_alu_rd_sel[2] = co_3reg_alu && funct3l == 3'b011 && funct2 != 0; //Bool
 
    //0 (OP_B_SOURCE_IMM) when OPIMM
    //1 (OP_B_SOURCE_RS2) when OP
    // TODO: must be a third option to load 0 for a compressed branch
    wire co_op_b_source = co_3reg_alu;
 
+
+   assign co_imm[0] = (quadrant == 2'b01 && funct3 != 3'b001 && funct3[2:1] != 2'b11 && funct3 != 3'b011 || 
+	               quadrant == 2'b11 && funct3 == 0) ? whole[2] : 0;
+   assign co_imm[1] = (quadrant == 2'b01 && funct3 != 3'b011 || quadrant == 2'b10 && funct3 == 0) ? whole[3] : 0;
+   assign co_imm[2] = (quadrant == 2'b00) ? whole[6] : 
+	              (quadrant == 2'b01 && funct3 != 3'b011 || quadrant == 2'b10 && funct3 == 3'b010) ? whole[4] : 0) :
+		      (quadrant == 2'b10 && funct3 == 3'b110) ? whole[9] : 0;
+   assign co_imm[3] = (quadrant == 0) ? (funct3 == 0 ? whole[5] : whole[10]) : 
+	              (quadrant == 2'b01) ? (funct3[2:1] == 2'b11 ? whole[10] : (funct3 != 3'b011 ? whole[5] : 0)) : 
+		      (funct3 == 3'b110) ? whole[10] : whole[5];
+   assign co_imm[4] = (quadrant == 0 || (quadrant == 2'd1 || quadrant == 2'd2) && (co_cond_branch || funct3 == 3'b001)) ? whole[11] : whole[6];
+   assign co_imm[5] = (quadrant == 0 || quadrant == 2'd1 && funct3 != 3'b011 || quadrant == 2'd2) ? whole[12] : whole[2];
+   assign co_imm[6] = (quadrant == 0 && funct3 != 0 || quadrant == 2'd1 && (funct3[2:1] == 2'b11 || funct3 == 3'b011) ? whole[5] : 
+	              (quadrant == 0 && funct3 == 0 || quadrant == 2'd1 && funct3 == 3'bx01 || quadrant == 2'd2 && funct3 == 3'b11x) ? whole[7] : 0;
+   assign co_imm[7] = (quadrant == 0 && funct3 == 0) ? whole[8] : (quadrant == 2'd1
+	              
+
    generate
       if (PRE_REGISTER) begin
 
          always @(posedge clk) begin
             if (i_wb_en) begin
-	       whole  <= i_wb_rdt;
-	       funct7 <= i_wb_rdt[31:25];
-               funct3 <= i_wb_rdt[14:12];
-               imm30  <= i_wb_rdt[30];
-               imm25  <= i_wb_rdt[25];
-               opcode <= i_wb_rdt[6:2];
-               op20   <= i_wb_rdt[20];
-               op21   <= i_wb_rdt[21];
-               op22   <= i_wb_rdt[22];
-               op26   <= i_wb_rdt[26];
+               funct3  <= i_wb_rdt[15:13];
+	       funct3l <= i_wb_rdt[12:10];
+	       funct2  <= i_wb_rdt[11:10];
+	       quadrant<= i_wb_rdt[1:0];
             end
          end
 
@@ -278,16 +301,10 @@ module serv_decode_compressed
       end else begin
 
          always @(*) begin
-	    whole   = i_wb_rdt;
-	    funct7  = i_wb_rdt[31:25];
-            funct3  = i_wb_rdt[14:12];
-            imm30   = i_wb_rdt[30];
-            imm25   = i_wb_rdt[25];
-            opcode  = i_wb_rdt[6:2];
-            op20    = i_wb_rdt[20];
-            op21    = i_wb_rdt[21];
-            op22    = i_wb_rdt[22];
-            op26    = i_wb_rdt[26];
+            funct3  = i_wb_rdt[15:13];
+	    funct3l = i_wb_rdt[12:10];
+	    funct2  = i_wb_rdt[11:10];
+	    quadrant= i_wb_rdt[1:0];
          end
 
          always @(posedge clk) begin
