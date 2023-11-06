@@ -100,62 +100,61 @@ module serv_decode_compressed
    wire co_branch_op = co_slt_or_branch;
 
 
-   wire co_dbus_en    = ~opcode[2] & ~opcode[4];
-   wire co_mtval_pc   = opcode[4];   
-   wire co_mem_word   = funct3[1];
-   wire co_rd_alu_en  = !opcode[0] & opcode[2] & !opcode[4] & !co_mdu_op;
-   wire co_rd_mem_en  = (!opcode[2] & !opcode[0]) | co_mdu_op;
+   wire co_dbus_en    = (quadrant == 2'b00 || quadrant == 2'b10) && (funct3 == 3'b010 || funct3 == 3'b110);
+   wire co_mtval_pc   = 0;    
+   wire co_mem_word   = 1;
+   wire co_rd_alu_en  = !co_dbus_en && !co_branch_op; 
+   wire co_rd_mem_en  = 0; // todo: what is this 
 
-   //jal,branch =     imm
-   //jalr       = rs1+imm
+   //jal,branch = imm
+   //jalr,jr    = rs1
    //mem        = rs1+imm
    //shift      = rs1
-   wire co_bufreg_rs1_en = !opcode[4] | (!opcode[1] & opcode[0]);
-   wire co_bufreg_imm_en = !opcode[2];
+   wire co_bufreg_rs1_en = quadrant == 2'b00 || (quadrant == 2'b01 || quadrant == 2'b11) && 
+	   (funct3 != 3'b000 && funct3 != 3'b001 && funct3 != 3'b101);
+   wire co_bufreg_imm_en = quadrant == 2'b00 || (quadrant == 2'b01 || quadrant == 2'b11) && (funct3 != 3'b100 && funct3 != 3'b000);
 
-   //Clear LSB of immediate for BRANCH and JAL ops
-   //True for BRANCH and JAL
-   //False for JALR/LOAD/STORE/OP/OPIMM?
-   wire co_bufreg_clr_lsb = opcode[4] & ((opcode[1:0] == 2'b00) | (opcode[1:0] == 2'b11));
+   // it is not enough to clear just one lsb for the compressed instructions,
+   // cause all loads and stores are aligned, so it must be done in the immdec
+   wire co_bufreg_clr_lsb = 0;
 
    //Conditional branch
    //True for BRANCH
    //False for JAL/JALR
-   wire co_cond_branch = !opcode[0];
+   wire co_cond_branch = funct3[2:1] == 2'b11;
 
-   wire co_ctrl_utype       = !opcode[4] & opcode[2] & opcode[0];
-   wire co_ctrl_jal_or_jalr = opcode[4] & opcode[0];
+   wire co_ctrl_utype       = quadrant == 2'b01 && funct3 == 3'b011; // lui only
+   wire co_ctrl_jal_or_jalr = !co_ctrl_utype; 
 
    //PC-relative operations
-   //True for jal, b* auipc, ebreak
-   //False for jalr, lui
-   wire co_ctrl_pc_rel = (opcode[2:0] == 3'b000)  |
-                          (opcode[1:0] == 2'b11)  |
-                          (opcode[4] & opcode[2]) & op20|
-                          (opcode[4:3] == 2'b00);
+   //True for jal, j, b* 
+   //False for jr, jalr, lui, ebreak
+   wire co_ctrl_pc_rel = funct3 != 3'b100 && funct3 != 3'b011; 
+   
    //Write to RD
    //True for OP-IMM, AUIPC, OP, LUI, SYSTEM, JALR, JAL, LOAD
-   //False for STORE, BRANCH, MISC-MEM
-   wire co_rd_op = ((opcode[2] & !opcode[1]) |
-                     (!opcode[2] & opcode[4] & opcode[0]) |
-                     (!opcode[2] & !opcode[3] & !opcode[0]));
+   //False for STORE, BRANCH, J, JR
+   wire co_rd_op = !(quadrant == 2'b00 && funct3 == 3'b110 || 
+	   quadrant == 2'b10 && (funct3 == 3'b110 || funct3 == 3'b000 && funct3l[2] == 0) || 
+	   quadrant == 2'b01 && funct3 == 3'b101
+	   ;
 
    //
    //funct3
    //
 
-   wire co_sh_right   = funct3[2];
+   wire co_sh_right   = quadrant == 2'b10;
    wire co_bne_or_bge = funct3[0];
 
-   //op20
-   wire co_ebreak = op20;
+   // ebreak is the only compressed e_op
+   wire co_ebreak = 1;
 
 
    //opcode & funct3 & op21
 
    wire co_ctrl_mret = 0;
    //Matches system opcodes except CSR accesses = compressed ebreak
-   wire co_e_op = co_ebreak;
+   wire co_e_op = i_wb_rdt == 16'h9002;
 
 `ifdef RISCV_FORMAL
    /*
@@ -172,7 +171,7 @@ module serv_decode_compressed
 
    //opcode & funct3 & imm30
 
-   wire co_bufreg_sh_signed = imm30;
+   wire co_bufreg_sh_signed = quadrant == 2'b01 && funct3 == 3'b100 && funct3l[1:0] == 2'b01;
 
    /*
     True for sub, b*, slt*
@@ -189,22 +188,25 @@ module serv_decode_compressed
 
    wire co_alu_cmp_eq = 1;
 
-   wire co_alu_cmp_sig = ~((funct3[0] & funct3[1]) | (funct3[1] & funct3[2]));
+   wire co_alu_cmp_sig = 0; // only used for result_lt, which is not used for compressed
 
-   wire co_mem_cmd  = opcode[3];
-   wire co_mem_signed = ~funct3[2];
-   wire co_mem_half   = funct3[0];
+   // actually the dbus_we = separates stores from loads 
+   wire co_mem_cmd  = funct3[2];
+   wire co_mem_signed = 0;
+   wire co_mem_half   = 0;
 
-   wire [1:0] co_alu_bool_op = funct3[1:0];
+   wire co_3reg_alu =  quadrant == 2'b01 && funct3 == 3'b100 && funct3l[1:0] == 2'b11; 
+   wire [1:0] co_alu_bool_op = (!co_3reg_alu) ? 2'b01 : (funct2 == 2'b01) ? : 2'b00 : funct2;
 
    wire [2:0] co_alu_rd_sel;
-   assign co_alu_rd_sel[0] = (funct3 == 3'b000); // Add/sub
+   assign co_alu_rd_sel[0] = !co_shift_op; // Add/sub, but really anything not shift
    assign co_alu_rd_sel[1] = 0; //SLT*
-   assign co_alu_rd_sel[2] = funct3[2]; //Bool
+   assign co_alu_rd_sel[2] = co_3reg_alu && func3l == 3'b011 && funct2 != 0; //Bool
 
    //0 (OP_B_SOURCE_IMM) when OPIMM
-   //1 (OP_B_SOURCE_RS2) when BRANCH or OP
-   wire co_op_b_source = opcode[3];
+   //1 (OP_B_SOURCE_RS2) when OP
+   // TODO: must be a third option to load 0 for a compressed branch
+   wire co_op_b_source = co_3reg_alu;
 
    generate
       if (PRE_REGISTER) begin
