@@ -185,6 +185,8 @@ module serv_top
    wire [31:0] wb_ibus_rdt;
    wire        wb_ibus_ack;
 
+   wire        is_MAC_step2, is_MAC_step1, pc_plus8, pc_minus4, pc_plus0;
+
    generate
       if (ALIGN) begin
          serv_aligner  align
@@ -269,6 +271,7 @@ module serv_top
       .i_slt_or_branch (slt_or_branch),
       .i_e_op         (e_op),
       .i_rd_op        (rd_op),
+      .i_MAC_step2    (is_MAC_step2),
       //MDU
       .i_mdu_op       (mdu_op),
       .o_mdu_valid    (o_mdu_valid),
@@ -322,6 +325,8 @@ module serv_top
       .o_bufreg_clr_lsb   (bufreg_clr_lsb),
       .o_bufreg_sh_signed (bufreg_sh_signed),
       //To bufreg2
+      .o_MAC_step1        (is_MAC_step1),
+      .o_MAC_step2        (is_MAC_step2),
       .o_op_b_source      (op_b_sel),
       //To ctrl
       .o_ctrl_jal_or_jalr (jal_or_jalr),
@@ -467,6 +472,8 @@ module serv_top
       .i_op_b_sel   (op_b_sel),
       .i_shift_op   (shift_op),
       .i_right_shift_op (sh_right),
+      .i_MAC_step1  (is_MAC_step1),
+      .i_MAC_step2  (is_MAC_step2),
       //Data
       .i_rs2        (rs2),
       .i_imm        (imm),
@@ -493,6 +500,7 @@ module serv_top
       .i_cnt0     (cnt0),
       .i_cnt1     (cnt1),
       .i_cnt2     (cnt2),
+      .i_cnt3     (cnt3),
       .i_cnt03    (cnt0to3),
       .i_cnt8     (cnt8),
       //Control
@@ -502,6 +510,9 @@ module serv_top
       .i_pc_rel   (pc_rel),
       .i_trap     (trap | mret),
       .i_iscomp    (iscomp),
+      .i_pc_minus4(pc_minus4),
+      .i_pc_plus8 (pc_plus8),
+      .i_pc_plus0 (pc_plus0),
       //Data
       .i_imm      (imm),
       .i_buf      (bufreg_q),
@@ -510,6 +521,22 @@ module serv_top
       .o_bad_pc   (bad_pc),
       //External
       .o_ibus_adr (wb_ibus_adr));
+
+   serv_MAC_step#(.W(W)) MAC_step(
+	   .clk(clk),
+           .i_MAC_step1  (is_MAC_step1),
+           .i_MAC_step2  (is_MAC_step2),
+	   .i_alu_cmp(alu_cmp),
+	   .i_cnt0   (cnt0),
+	   .i_cnt_en (cnt_en),
+	   .i_cnt_done(cnt_done),
+	   .i_init   (init),
+	   .i_rs1    (rs1),
+
+	   .o_pc_plus8(pc_plus8),
+	   .o_pc_minus4(pc_minus4),
+	   .o_pc_plus0(pc_plus0)
+   );
 
    serv_alu#(.W(W)) alu
      (
@@ -524,6 +551,7 @@ module serv_top
       .i_cmp_eq   (alu_cmp_eq),
       .i_cmp_sig  (alu_cmp_sig),
       .i_rd_sel   (alu_rd_sel),
+      .i_MAC_step2(is_MAC_step2),
       //Data
       .i_rs1      (rs1),
       .i_op_b     (op_b),

@@ -30,6 +30,9 @@ module serv_decode
    output reg       o_bufreg_imm_en,
    output reg       o_bufreg_clr_lsb,
    output reg       o_bufreg_sh_signed,
+   // to bufreg2
+   output reg       o_MAC_step1,
+   output reg       o_MAC_step2,
    //To ctrl
    output reg       o_ctrl_jal_or_jalr,
    output reg       o_ctrl_utype,
@@ -159,6 +162,9 @@ module serv_decode
    wire co_sh_right   = funct3[2];
    wire co_bne_or_bge = funct3[0];
 
+   wire co_MAC_step1 = co_shift_op & funct7[6];
+   wire co_MAC_step2 = co_shift_op & funct7[5];
+
    //Matches system ops except eceall/ebreak/mret
    wire csr_op = opcode[4] & opcode[2] & (|funct3);
 
@@ -201,7 +207,7 @@ module serv_decode
     add   01100  000 0   f
     sub   01100  000 1   t
     */
-   wire co_alu_sub = funct3[1] | funct3[0] | (opcode[3] & imm30) | opcode[4];
+   wire co_alu_sub = (funct3[1] | funct3[0] | (opcode[3] & imm30) | opcode[4]) & !co_MAC_step2;
 
    /*
     Bits 26, 22, 21 and 20 are enough to uniquely identify the eight supported CSR regs
@@ -240,7 +246,7 @@ module serv_decode
    wire co_csr_imm_en = opcode[4] & opcode[2] & funct3[2];
    wire [1:0] co_csr_addr = {op26 & op20, !op26 | op21};
 
-   wire co_alu_cmp_eq = funct3[2:1] == 2'b00;
+   wire co_alu_cmp_eq = funct3[2:1] == 2'b00 || co_MAC_step1;
 
    wire co_alu_cmp_sig = ~((funct3[0] & funct3[1]) | (funct3[1] & funct3[2]));
 
@@ -267,7 +273,7 @@ module serv_decode
    assign co_immdec_en[0] = ~co_rd_op;                                                       //B     S
 
    wire [2:0] co_alu_rd_sel;
-   assign co_alu_rd_sel[0] = (funct3 == 3'b000); // Add/sub
+   assign co_alu_rd_sel[0] = (funct3 == 3'b000 || co_MAC_step2); // Add/sub
    assign co_alu_rd_sel[1] = (funct3[2:1] == 2'b01); //SLT*
    assign co_alu_rd_sel[2] = funct3[2]; //Bool
 
@@ -339,6 +345,8 @@ module serv_decode
             o_rd_csr_en        = co_rd_csr_en;
             o_rd_alu_en        = co_rd_alu_en;
             o_rd_mem_en        = co_rd_mem_en;
+	    o_MAC_step1        = co_MAC_step1;
+	    o_MAC_step2        = co_MAC_step2;
 	    //o_valid_instruction= co_valid_instruction;
          end
 
@@ -404,6 +412,8 @@ module serv_decode
                o_rd_csr_en        <= co_rd_csr_en;
                o_rd_alu_en        <= co_rd_alu_en;
                o_rd_mem_en        <= co_rd_mem_en;
+	       o_MAC_step1        <= co_MAC_step1;
+	       o_MAC_step2        <= co_MAC_step2;
 	       //o_valid_instruction<= co_valid_instruction;
             end
          end

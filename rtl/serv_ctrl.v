@@ -15,6 +15,7 @@ module serv_ctrl
    input wire 	     i_cnt0,
    input wire        i_cnt1,
    input wire 	     i_cnt2,
+   input wire        i_cnt3,
    input wire 	     i_cnt03,
    input wire        i_cnt8,
    //Control
@@ -24,6 +25,9 @@ module serv_ctrl
    input wire 	     i_pc_rel,
    input wire 	     i_trap,
    input wire        i_iscomp,
+   input wire        i_pc_minus4,
+   input wire        i_pc_plus8,
+   input wire        i_pc_plus0,
    //Data
    input wire [B:0] i_imm,
    input wire [B:0] i_buf,
@@ -55,7 +59,7 @@ module serv_ctrl
 
 generate
 if (W == 1)
-   assign plus_4        = i_iscomp ? i_cnt1 : i_cnt2;
+   assign plus_4        = i_pc_plus0 ? 0 : i_pc_minus4 ? !(i_cnt0 | i_cnt1) : i_pc_plus8 ? i_cnt3 : (i_iscomp ? i_cnt1 : i_cnt2);
 else
    assign plus_4        = (i_cnt03) ? (i_iscomp ? 2 : 4) : 0;
 endgenerate

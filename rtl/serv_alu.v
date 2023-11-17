@@ -16,6 +16,7 @@ module serv_alu
    input wire 	    i_cmp_eq,
    input wire 	    i_cmp_sig,
    input wire [2:0] i_rd_sel,
+   input wire       i_MAC_step2,
    //Data
    input wire  [B:0] i_rs1,
    input wire  [B:0] i_op_b,
@@ -36,7 +37,8 @@ module serv_alu
 
    wire [B:0] add_b = i_op_b^{W{i_sub}};
 
-   assign {add_cy,result_add}   = i_rs1+add_b+add_cy_r;
+   wire [B:0] zeroB = 0; 
+   assign {add_cy,result_add}   = {zeroB, ((i_MAC_step2) ? i_buf : i_rs1)} +add_b+add_cy_r;
 
    wire result_lt = rs1_sx + ~op_b_sx + add_cy;
 
@@ -63,7 +65,7 @@ module serv_alu
       if (W>1) assign result_slt[B:1] = '0;
    endgenerate
 
-   assign o_rd = i_buf |
+   assign o_rd = ({W{!(i_MAC_step2)}} & i_buf) |
                  ({W{i_rd_sel[0]}} & result_add) |
                  ({W{i_rd_sel[1]}} & result_slt) |
                  ({W{i_rd_sel[2]}} & result_bool);
