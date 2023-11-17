@@ -1,7 +1,7 @@
 `default_nettype none
 module serv_alu
   #(
-   parameter W,
+   parameter W = 1,
    parameter B = W-1
   )
   (
@@ -62,7 +62,7 @@ module serv_alu
 
    assign result_slt[0] = cmp_r & i_cnt0;
    generate
-      if (W>1) assign result_slt[B:1] = '0;
+      if (W>1) assign result_slt[B:1] = 0;
    endgenerate
 
    assign o_rd = ({W{!(i_MAC_step2)}} & i_buf) |

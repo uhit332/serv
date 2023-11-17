@@ -2,7 +2,7 @@
 module serv_csr
   #(
     parameter RESET_STRATEGY = "MINI",
-    parameter W,
+    parameter W = 1,
     parameter B = W-1
   )
   (
